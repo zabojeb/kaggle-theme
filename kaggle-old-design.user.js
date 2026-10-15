@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Kaggle: старый дизайн
+// @name         Kaggle Old Design
 // @namespace    https://github.com/zabojeb/kaggle-theme
-// @version      1.0.0
-// @description  Полностью возвращает дизайн Kaggle до ребрендинга (цвета, шрифты, навигация, профили), выключая фича-флаг Rebrand.
+// @version      1.0.1
+// @description  Fully restores Kaggle's pre-rebrand design (colors, fonts, navigation, profiles) by turning off the Rebrand feature flag.
 // @homepageURL  https://github.com/zabojeb/kaggle-theme
 // @supportURL   https://github.com/zabojeb/kaggle-theme/issues
 // @updateURL    https://raw.githubusercontent.com/zabojeb/kaggle-theme/main/kaggle-old-design.user.js
@@ -15,16 +15,16 @@
 (() => {
   'use strict';
 
-  // Новый дизайн Kaggle включается клиентским фича-флагом `Rebrand`, а старый код
-  // всё ещё лежит в бандле. Флаги приходят из RPC GetClientFeatureFlags и кешируются
-  // в localStorage. Скрипт вычищает флаг из обоих мест до того, как стартует приложение.
+  // Kaggle's new design is gated by the client-side `Rebrand` feature flag, and the old code
+  // still ships in the bundle. Flags come from the GetClientFeatureFlags RPC and are cached
+  // in localStorage. The script strips the flag from both places before the app starts.
   const FLAG = 'Rebrand';
   const CACHE_KEY = 'KAGGLE_FEATURE_FLAGS';
   const RPC = '/api/i/users.UsersService/GetClientFeatureFlags';
 
   const withoutFlag = (flags) => (Array.isArray(flags) ? flags.filter((f) => f !== FLAG) : flags);
 
-  // 1. Кеш: если хеш флагов не поменялся, Kaggle берёт их отсюда и сеть не трогает.
+  // 1. Cache: while the flags hash is unchanged, Kaggle reads flags from here and skips the network.
   const setItem = Storage.prototype.setItem;
   try {
     const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
@@ -34,8 +34,8 @@
     }
   } catch {}
 
-  // 2. Сеть: при смене хеша флаги перезапрашиваются, и приложение собирает
-  //    их в памяти прямо из ответа, поэтому ответ правится до того, как его прочитают.
+  // 2. Network: when the hash changes, flags are refetched and the app builds its in-memory
+  //    set straight from the response, so the response is patched before anyone reads it.
   const fetch = window.fetch;
   window.fetch = async function (input, init) {
     const response = await fetch.apply(this, arguments);
@@ -54,7 +54,7 @@
     }
   };
 
-  // 3. Подстраховка на случай, если кеш запишут в обход ответа выше.
+  // 3. Safety net in case the cache gets written without going through the response above.
   Storage.prototype.setItem = function (key, value) {
     if (key === CACHE_KEY && this === window.localStorage) {
       try {

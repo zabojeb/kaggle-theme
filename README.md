@@ -1,28 +1,28 @@
 # kaggle-theme
 
-Юзерскрипты для [Tampermonkey](https://www.tampermonkey.net/), которые возвращают Kaggle вид до ребрендинга. Ставить нужно какой-то один.
+[Tampermonkey](https://www.tampermonkey.net/) userscripts that bring back Kaggle's pre-rebrand look. Install one of them, not both.
 
-| Скрипт | Что делает | Установка |
+| Script | What it does | Install |
 |---|---|---|
-| **Kaggle: старые цвета профилей** | Новый дизайн остаётся, но цвета профилей возвращаются старые: кольца аватаров, иконки тиров и медалей, шапка профиля, heatmap активности. | [установить](https://raw.githubusercontent.com/zabojeb/kaggle-theme/main/kaggle-old-profile-colors.user.js) |
-| **Kaggle: старый дизайн** | Полностью возвращает старый дизайн: цвета, шрифты, навигацию, профили. | [установить](https://raw.githubusercontent.com/zabojeb/kaggle-theme/main/kaggle-old-design.user.js) |
+| **Kaggle Old Profile Colors** | Keeps the new design but restores the old profile colors: avatar rings, tier and medal icons, the profile header, and the activity heatmap. | [install](https://raw.githubusercontent.com/zabojeb/kaggle-theme/main/kaggle-old-profile-colors.user.js) |
+| **Kaggle Old Design** | Fully restores the old design: colors, fonts, navigation, profiles. | [install](https://raw.githubusercontent.com/zabojeb/kaggle-theme/main/kaggle-old-design.user.js) |
 
-При открытии ссылки «установить» Tampermonkey сам предложит поставить скрипт. Обновления он будет подтягивать из этого репозитория.
+Opening an install link makes Tampermonkey offer to install the script. Updates are pulled from this repository automatically.
 
-## Как это работает
+## How it works
 
-Новый дизайн включается клиентским фича-флагом `Rebrand`, а старый код и обе палитры по-прежнему лежат в бандле Kaggle. Поэтому все цвета взяты прямо оттуда, а не подобраны на глаз.
+The new design is switched on by a client-side feature flag, `Rebrand`, while the old code and both color palettes still ship in Kaggle's bundle. All colors are taken from there rather than picked by eye.
 
-- **Старый дизайн** убирает флаг `Rebrand` из кеша флагов в `localStorage` и из ответа `GetClientFeatureFlags`. После этого Kaggle сам рендерит старую версию. Скрипт работает, пока Kaggle держит старый код за флагом. Когда его удалят, сайт просто останется в новом дизайне.
-- **Старые цвета профилей** перекрашивает элементы нового дизайна:
+- **Old Design** strips the `Rebrand` flag from the flags cache in `localStorage` and from the `GetClientFeatureFlags` response, so Kaggle renders the old version by itself. It keeps working as long as Kaggle keeps the old code behind the flag. Once that code is removed, the site will simply stay on the new design.
+- **Old Profile Colors** recolors elements of the new design:
 
-  | Тир | Новый цвет | Старый цвет |
+  | Tier | New color | Old color |
   |---|---|---|
-  | Novice / Contributor | `#B3C8CE` | `#20BEFF` (heatmap у Novice — `#1CCD76`) |
+  | Novice / Contributor | `#B3C8CE` | `#20BEFF` (Novice heatmap: `#1CCD76`) |
   | Expert | `#9191FF` | `#8148FD` |
   | Master | `#FF6A00` | `#FF5C19` |
-  | Grandmaster | `#FFC412` | `#EBCC29` (heatmap — `#E5CF4A`) |
+  | Grandmaster | `#FFC412` | `#EBCC29` (heatmap: `#E5CF4A`) |
 
-  Иконки тиров и медалей подменяются на старые файлы с kaggle.com. Шапка профиля рисуется старыми жёлто-синими фигурами, вариант выбирается по `userId`, как это делал сам Kaggle.
+  Tier and medal icons are swapped back to the old files on kaggle.com. The profile header gets the old yellow and blue blobs, with the variant picked by `userId`, the same way Kaggle did it.
 
-Скрипту цветов нужен `@grant none`: тир и `userId` он читает из React-пропсов страницы.
+The colors script needs `@grant none`: it reads the tier and `userId` from the page's React props.
