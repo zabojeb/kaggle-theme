@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kaggle Rework
 // @namespace    https://github.com/zabojeb/kaggle-theme
-// @version      1.0.0
+// @version      1.1.0
 // @description  A more polished, modern take on Kaggle's new design: readable text, soft surfaces and a glass top bar, plus a command palette, keyboard shortcuts, live competition deadlines, a quick theme switch and nicer notebooks. Every part can be turned off in its settings.
 // @homepageURL  https://github.com/zabojeb/kaggle-theme
 // @supportURL   https://github.com/zabojeb/kaggle-theme/issues
@@ -22,12 +22,13 @@
     return;
   }
 
-  const VERSION = '1.0.0';
+  const VERSION = '1.1.0';
   const REPO_URL = 'https://github.com/zabojeb/kaggle-theme';
   const SETTINGS_KEY = 'kaggle-rework:settings';
   const RECENT_KEY = 'kaggle-rework:recent';
   const NOTEBOOK_ORIGIN = 'https://www.kaggleusercontent.com';
   const TOP_BAR = 'nav[aria-label="Main menu, search and your account"]';
+  const SIDE_NAV = 'nav[aria-label="Main Kaggle page navigation"]';
   const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
   const MOD = IS_MAC ? '⌘' : 'Ctrl';
 
@@ -50,6 +51,7 @@
     readingProgress: true,
     backToTop: true,
     notebooks: true,
+    hoverSideMenu: false,
   };
   const CHOICES = {
     contentWidth: ['default', 'wide', 'full'],
@@ -61,7 +63,7 @@
       title: 'Look and feel',
       items: [
         { key: 'readableText', title: 'Readable text', desc: 'Regular weight instead of light for body text, so small text is easier to read.' },
-        { key: 'modernSurfaces', title: 'Modern surfaces', desc: 'Soft layered shadows, lighter borders and a gentle lift on cards.' },
+        { key: 'modernSurfaces', title: 'Modern surfaces', desc: 'Soft layered shadows and lighter borders, with cards gaining depth when you point at them.' },
         { key: 'glassHeader', title: 'Glass top bar', desc: 'A translucent top bar that blurs the page scrolling behind it.' },
         { key: 'visibleFocus', title: 'Visible focus', desc: 'Clear blue focus rings when you move around with the keyboard.' },
         { key: 'typography', title: 'Typography polish', desc: 'Even-width numbers in tables and leaderboards, balanced headings, nicer selection and slim scrollbars.' },
@@ -79,6 +81,12 @@
         { key: 'readingProgress', title: 'Reading progress', desc: 'A thin progress bar on notebooks, discussions and writeups.' },
         { key: 'backToTop', title: 'Back to top', desc: 'A button to jump back up on long pages.' },
         { key: 'notebooks', title: 'Modern notebooks', desc: 'Google Sans fonts, rounded code blocks, copy buttons and clean tables in notebooks.' },
+      ],
+    },
+    {
+      title: 'Behavior',
+      items: [
+        { key: 'hoverSideMenu', title: 'Open the side menu on hover', desc: 'Kaggle expands the collapsed side menu when the pointer rests on it. When this is off, it opens only from its menu button.' },
       ],
     },
   ];
@@ -242,30 +250,32 @@ html.kr-surfaces.kr-dark {
   --kr-elev-4: 0 22px 44px -14px rgb(0 0 0 / 66%);
   --kr-elev-5: 0 32px 64px -18px rgb(0 0 0 / 72%);
 }
+/* Cards respond to hover with depth only: moving them would make them jitter under the pointer. */
 html.kr-surfaces ${CARD} {
   box-shadow: var(--kr-elev-1);
-  transition: transform .3s cubic-bezier(.2, .8, .2, 1), box-shadow .3s ease, border-color .3s ease;
+  transition: box-shadow .25s ease, border-color .25s ease;
 }
-html.kr-surfaces ${CARD}:hover {
-  box-shadow: var(--kr-elev-3);
-  transform: translateY(-3px);
-}
+html.kr-surfaces ${CARD}:hover { box-shadow: var(--kr-elev-3); }
 :where(html.kr-surfaces #site-content) :where(a, button, [role="button"], [role="tab"], [role="option"]) {
   transition-property: color, background-color, border-color, box-shadow, opacity;
   transition-duration: .18s;
   transition-timing-function: ease;
 }
 
-html.kr-glass ${TOP_BAR_SURFACE} {
+html.kr-glass:not(.kr-narrow) ${TOP_BAR_SURFACE} {
   background-color: rgb(255 255 255 / 76%) !important;
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
   /* Kaggle slides the bar away while scrolling down; keep that animation. */
   transition: transform .5s, box-shadow .25s ease;
 }
-html.kr-glass.kr-dark ${TOP_BAR_SURFACE} { background-color: rgb(24 24 24 / 72%) !important; }
-html.kr-glass.kr-scrolled ${TOP_BAR_SURFACE} { box-shadow: 0 1px 0 rgb(0 0 0 / 6%), 0 12px 24px -20px rgb(0 0 0 / 40%); }
-html.kr-glass.kr-dark.kr-scrolled ${TOP_BAR_SURFACE} { box-shadow: 0 1px 0 rgb(255 255 255 / 6%), 0 12px 24px -20px rgb(0 0 0 / 80%); }
+html.kr-glass.kr-dark:not(.kr-narrow) ${TOP_BAR_SURFACE} { background-color: rgb(24 24 24 / 72%) !important; }
+html.kr-glass.kr-scrolled:not(.kr-narrow) ${TOP_BAR_SURFACE} { box-shadow: 0 1px 0 rgb(0 0 0 / 6%), 0 12px 24px -20px rgb(0 0 0 / 40%); }
+html.kr-glass.kr-dark.kr-scrolled:not(.kr-narrow) ${TOP_BAR_SURFACE} { box-shadow: 0 1px 0 rgb(255 255 255 / 6%), 0 12px 24px -20px rgb(0 0 0 / 80%); }
+/* On phones the page doesn't scroll under the bar, and the bar also holds the menu button and the
+   logo: it keeps its color and gets a shadow along its whole width. */
+html.kr-glass.kr-narrow.kr-scrolled ${TOP_BAR} { box-shadow: 0 12px 24px -20px rgb(0 0 0 / 40%); }
+html.kr-glass.kr-narrow.kr-dark.kr-scrolled ${TOP_BAR} { box-shadow: 0 12px 24px -20px rgb(0 0 0 / 80%); }
 
 html.kr-typography { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 html.kr-typography #site-content :is(h1, h2, h3, h4) { text-wrap-style: balance; }
@@ -277,10 +287,6 @@ html.kr-typography #site-content { scrollbar-width: thin; scrollbar-color: rgb(3
 html.kr-typography.kr-dark #site-content { scrollbar-color: rgb(255 255 255 / 22%) transparent; }
 
 html.kr-compact { --kr-list-padding: 9px 16px; }
-
-@media (prefers-reduced-motion: reduce) {
-  html.kr-surfaces ${CARD}, html.kr-surfaces ${CARD}:hover { transform: none; transition: none; }
-}
 `;
 
   function applyDesignClasses() {
@@ -403,6 +409,38 @@ html.kr-compact { --kr-list-padding: 9px 16px; }
   const kaggleDialogOpen = () => Boolean(document.querySelector('.MuiModal-root:not(.MuiModal-hidden), [role="dialog"][aria-modal="true"]'));
 
   // ---------------------------------------------------------------------------
+  // Side menu
+  // ---------------------------------------------------------------------------
+
+  // Kaggle expands the collapsed side menu 200 ms after the pointer enters it, and skips touch
+  // pointers. Unless the setting asks for hover, pointer events entering the menu are reported
+  // to the app as touch, so the menu opens only from its menu button.
+  let sideNavZone = null;
+
+  function sideNavHoverZone() {
+    if (sideNavZone?.isConnected) return sideNavZone;
+    sideNavZone = null;
+    for (const element of document.querySelectorAll(`${SIDE_NAV} div`)) {
+      const key = Object.keys(element).find((name) => name.startsWith('__reactProps$'));
+      if (key && typeof element[key].onPointerEnter === 'function') {
+        sideNavZone = element;
+        break;
+      }
+    }
+    return sideNavZone;
+  }
+
+  function suppressSideNavHover(event) {
+    if (settings.hoverSideMenu || event.pointerType === 'touch') return;
+    const [from, to] = event.type === 'pointerout' ? [event.target, event.relatedTarget] : [event.relatedTarget, event.target];
+    if (!(to instanceof Element) || !to.closest(SIDE_NAV)) return;
+    const zone = sideNavHoverZone();
+    if (zone?.contains(to) && !(from instanceof Node && zone.contains(from))) {
+      Object.defineProperty(event, 'pointerType', { value: 'touch' });
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Recently viewed pages
   // ---------------------------------------------------------------------------
 
@@ -423,6 +461,8 @@ html.kr-compact { --kr-list-padding: 9px 16px; }
   ];
   const GENERIC_TITLE = /^(?:kaggle(?::.*)?)?$/i;
   let staleTitle = null;
+  let visitSince = 0; // when the address last changed
+  let visitTimer = 0;
 
   function pageKind(path) {
     for (const kind of PAGE_KINDS) {
@@ -432,11 +472,34 @@ html.kr-compact { --kr-list-padding: 9px 16px; }
     return null;
   }
 
+  // The name of the discussion in the address, once the page has loaded it.
+  function discussionTopic() {
+    const id = Number(location.pathname.match(/\/(\d+)\/?$/)?.[1]);
+    const header = document.querySelector('#site-content [data-testid="discussions-topic-header"]');
+    const topic = findInFibers(header, (fiber) => Object.values(fiber.memoizedProps || {})
+      .find((value) => value?.id === id && typeof value.name === 'string'), 12);
+    return topic?.name.trim() || '';
+  }
+
   function recordVisit() {
+    clearTimeout(visitTimer);
     const kind = pageKind(location.pathname);
-    const title = document.title.replace(/\s*\|\s*Kaggle\s*$/, '').trim();
+    let title = document.title.replace(/\s*\|\s*Kaggle\s*$/, '').trim();
     // Right after a navigation the title still belongs to the previous page.
-    if (!kind || GENERIC_TITLE.test(title) || document.title === staleTitle) return;
+    let ready = Boolean(kind) && !GENERIC_TITLE.test(title) && document.title !== staleTitle;
+    if (kind?.kind === 'discussion') {
+      // Discussions inside a competition are all titled after the competition, so a discussion
+      // is named after its topic, which loads a moment after the address changes.
+      const topic = discussionTopic();
+      if (topic) {
+        title = topic;
+        ready = true;
+      } else if (Date.now() - visitSince < 5000) {
+        visitTimer = setTimeout(recordVisit, 500);
+        return;
+      }
+    }
+    if (!ready) return;
     const recent = (readJson(RECENT_KEY) || []).filter((entry) => entry?.url && entry.url !== kind.url);
     recent.unshift({ url: kind.url, title, kind: kind.kind, time: Date.now() });
     writeJson(RECENT_KEY, recent.slice(0, 30));
@@ -448,6 +511,7 @@ html.kr-compact { --kr-list-padding: 9px 16px; }
       clearTimeout(timer);
       timer = setTimeout(recordVisit, 400);
     }).observe(document.head, { childList: true, subtree: true, characterData: true });
+    visitSince = Date.now();
     recordVisit();
   }
 
@@ -471,8 +535,10 @@ html.kr-compact { --kr-list-padding: 9px 16px; }
   --kr-accent: #FFC412;
   --kr-focus-ring: #4D94FF;
   --kr-invert-bg: #1F1F1F;
+  --kr-invert-hover: #3D3D3D;
   --kr-invert-text: #FFFFFF;
   --kr-scrim: rgb(31 31 31 / 30%);
+  --kr-scroll-shadow: rgb(0 0 0 / 12%);
   --kr-shadow: 0 2px 6px rgb(18 18 24 / 6%), 0 28px 64px -20px rgb(18 18 24 / 34%);
   font-family: "Google Sans Flex", Inter, system-ui, -apple-system, sans-serif;
   font-size: 14px;
@@ -490,8 +556,10 @@ html.kr-compact { --kr-list-padding: 9px 16px; }
   --kr-text-2: #B8B8B8;
   --kr-text-3: #8A8A8A;
   --kr-invert-bg: #F1F1F1;
+  --kr-invert-hover: #FFFFFF;
   --kr-invert-text: #1F1F1F;
   --kr-scrim: rgb(0 0 0 / 55%);
+  --kr-scroll-shadow: rgb(0 0 0 / 50%);
   --kr-shadow: 0 2px 6px rgb(0 0 0 / 40%), 0 28px 64px -20px rgb(0 0 0 / 75%);
 }
 *, *::before, *::after { box-sizing: border-box; }
@@ -564,11 +632,11 @@ kbd {
   cursor: pointer;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(12px) scale(.92);
-  transition: opacity .2s ease, transform .25s cubic-bezier(.2, .8, .2, 1), visibility .2s;
+  transform: translate(calc(-1 * var(--kr-top-shift, 0px)), 8px);
+  transition: opacity .2s ease, transform .2s ease, visibility 0s linear .2s, background-color .15s ease;
 }
-.top.show { opacity: 1; visibility: visible; transform: none; }
-.top.show:hover { transform: translateY(-2px); }
+.top.show { opacity: 1; visibility: visible; transform: translateX(calc(-1 * var(--kr-top-shift, 0px))); transition-delay: 0s; }
+.top:hover { background: var(--kr-invert-hover); }
 .top:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 3px; }
 .top .icon { font-size: 22px; }
 .toast {
@@ -614,7 +682,15 @@ kbd {
   animation: kr-rise .2s cubic-bezier(.2, .8, .2, 1);
 }
 
-.dialog { width: min(640px, 100%); max-height: min(580px, 76vh); border-radius: 20px; }
+.dialog { width: min(640px, 100%); max-height: min(580px, calc(88vh - 32px)); border-radius: 20px; }
+/* Scroll shadows: a soft edge appears only where there is more to scroll to. */
+.results, .body {
+  background:
+    linear-gradient(var(--kr-bg) 30%, transparent) center top / 100% 32px no-repeat local,
+    linear-gradient(transparent, var(--kr-bg) 70%) center bottom / 100% 32px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, var(--kr-scroll-shadow), transparent) center top / 100% 10px no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, var(--kr-scroll-shadow), transparent) center bottom / 100% 10px no-repeat scroll;
+}
 .search {
   display: flex;
   align-items: center;
@@ -670,7 +746,7 @@ mark {
 .footer span { display: inline-flex; align-items: center; gap: 4px; }
 .footer .brand { margin-left: auto; }
 
-.panel { width: min(600px, 100%); max-height: min(760px, 86vh); border-radius: 24px; }
+.panel { width: min(600px, 100%); max-height: min(760px, calc(88vh - 32px)); border-radius: 24px; }
 .panel header { display: flex; align-items: flex-start; gap: 12px; padding: 22px 24px 10px; }
 .panel h2 { margin: 0; font: 400 26px/1.15 "FG Futurist", "Google Sans Flex", sans-serif; letter-spacing: -0.01em; }
 .panel .version { margin-top: 4px; color: var(--kr-text-3); font-size: 12px; }
@@ -706,6 +782,7 @@ mark {
   height: 24px;
   border-radius: 999px;
   background: var(--kr-bg-active);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 6%);
   cursor: pointer;
   transition: background-color .2s ease;
 }
@@ -744,6 +821,7 @@ mark {
 }
 .btn {
   all: unset;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   height: 36px;
@@ -774,15 +852,21 @@ mark {
   .overlay.open, .dialog, .panel { animation: none; }
 }
 @media (max-width: 600px) {
+  .top { right: 16px; bottom: calc(16px + var(--kr-bottom-inset, 0px)); }
   .shortcuts { grid-template-columns: 1fr; }
   .footer span:not(.brand) { display: none; }
+  .row:has(.segmented) { flex-wrap: wrap; row-gap: 10px; }
+  .row:has(.segmented) .text { flex-basis: 100%; }
 }
 `;
 
   const ACTIONS_CSS = `
 :host { display: inline-flex; flex: none; align-items: center; gap: 4px; margin: 0 4px 0 12px; }
 :host([data-in-row]) { margin: 0 -8px 0 0; }
-@media (max-width: 839px) { :host { display: none; } }
+:host([hidden]), :host([data-fit="none"]) { display: none; }
+:host([data-fit="compact"]) .jump { display: none; }
+/* Below 840px Kaggle's search box keeps the room the palette button would take. */
+@media (max-width: 839px) { .jump { display: none; } }
 button {
   all: unset;
   display: inline-flex;
@@ -798,21 +882,26 @@ button {
 }
 button:hover { background: var(--kr-bg-hover); color: var(--kr-text); }
 button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 2px; }
-.jump { height: 36px; padding: 0 8px 0 12px; border: 1px solid var(--kr-border); font-size: 13px; }
-.jump .label { margin-right: 4px; }
+/* No search icon here: it would repeat the one in Kaggle's search box right next to it. */
+.jump { box-sizing: border-box; gap: 3px; height: 40px; padding: 0 10px 0 14px; border: 1px solid var(--kr-border); font-size: 13px; }
+.jump .label { margin-right: 7px; }
 .round .icon { font-size: 22px; }
-@media (max-width: 1199px) { .jump .label { display: none; } }
+@media (max-width: 1199px) {
+  .jump { padding: 0 10px; }
+  .jump .label { display: none; }
+}
 `;
 
   const COUNTDOWN_CSS = `
-:host { position: relative; display: inline-flex; margin-left: 10px; vertical-align: middle; }
+/* Negative margins keep the pill from making the line of text around it taller. */
+:host { position: relative; top: -1px; display: inline-flex; margin: -3px 0 -3px 10px; vertical-align: middle; }
 .pill {
   all: unset;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 24px;
-  padding: 0 10px 0 7px;
+  height: 22px;
+  padding: 0 9px 0 6px;
   border-radius: 999px;
   background: rgb(255 196 18 / 22%);
   color: var(--kr-text);
@@ -843,10 +932,14 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
   opacity: 0;
   visibility: hidden;
   transform: translateY(-4px);
-  transition: opacity .15s ease, transform .15s ease, visibility .15s;
+  transition: opacity .15s ease, transform .15s ease, visibility 0s linear .15s;
 }
 .pop::before { content: ""; position: absolute; top: -10px; left: 0; right: 0; height: 10px; }
-:host(:hover) .pop, :host(:focus-within) .pop, :host(.open) .pop { opacity: 1; visibility: visible; transform: none; }
+/* Hovering waits a moment, so the list doesn't flash while the pointer passes by. */
+@media (hover: hover) {
+  :host(:hover) .pop { opacity: 1; visibility: visible; transform: none; transition-delay: .3s; }
+}
+:host(.open) .pop, .pill:focus-visible + .pop { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
 .heading { padding: 8px 10px 6px; color: var(--kr-text-3); font-size: 12px; }
 .milestone {
   display: grid;
@@ -866,7 +959,7 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
 .when { grid-column: 2 / 4; color: var(--kr-text-3); font-size: 12px; font-variant-numeric: tabular-nums; }
 /* On phones the list opens as a sheet at the bottom of the screen. */
 @media (max-width: 600px) {
-  .pop { position: fixed; top: auto; right: 16px; bottom: 16px; left: 16px; width: auto; }
+  .pop { position: fixed; top: auto; right: 16px; bottom: 16px; left: 16px; width: auto; transform: translateY(8px); }
   .pop::before { display: none; }
 }
 `;
@@ -941,15 +1034,35 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
 
   const dialogs = {};
 
+  let dialogOpener = null;
+
+  // Tab and Shift+Tab cycle inside an open dialog instead of wandering off into the page.
+  function trapFocus(event) {
+    if (event.key !== 'Tab') return;
+    const overlay = event.currentTarget;
+    const focusable = [...overlay.querySelectorAll('button, a[href], input')].filter((node) => node.getClientRects().length);
+    if (!focusable.length) return;
+    const active = overlay.getRootNode().activeElement;
+    const edge = event.shiftKey ? focusable[0] : focusable.at(-1);
+    if (active === edge || !overlay.contains(active)) {
+      event.preventDefault();
+      (event.shiftKey ? focusable.at(-1) : focusable[0]).focus();
+    }
+  }
+
   function openDialog(name, build) {
-    closePalette();
-    closeDialogs();
+    // Focus returns to whatever had it before the first dialog opened.
+    const active = document.activeElement;
+    if (active?.localName !== 'kaggle-rework-ui') dialogOpener = active;
+    closePalette(false);
+    closeDialogs(false);
     let overlay = dialogs[name];
     if (!overlay) {
       overlay = el('div', 'overlay');
       overlay.addEventListener('mousedown', (event) => {
         if (event.target === overlay) closeDialogs();
       });
+      overlay.addEventListener('keydown', trapFocus);
       ui().root.append(overlay);
       dialogs[name] = overlay;
     }
@@ -958,8 +1071,10 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
     overlay.querySelector('.icon-button')?.focus();
   }
 
-  function closeDialogs() {
-    for (const overlay of Object.values(dialogs)) overlay.classList.remove('open');
+  function closeDialogs(restoreFocus = true) {
+    const open = Object.values(dialogs).filter((overlay) => overlay.classList.contains('open'));
+    for (const overlay of open) overlay.classList.remove('open');
+    if (open.length && restoreFocus) dialogOpener?.focus?.();
   }
 
   function panelHeader(title, subtitle) {
@@ -1080,14 +1195,25 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
     return typeof target.url === 'function' ? target.url() : target.url;
   }
 
+  function timeAgo(time) {
+    const minutes = Math.round((Date.now() - time) / 6e4);
+    if (!(minutes >= 1)) return 'just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.round(hours / 24);
+    return days < 30 ? `${days}d ago` : new Date(time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
   function paletteItems() {
     const items = [];
     const signedIn = isSignedIn();
     const current = pageKind(location.pathname)?.url;
-    for (const entry of readJson(RECENT_KEY) || []) {
-      if (!entry?.url || entry.url === current) continue;
+    const recent = (readJson(RECENT_KEY) || []).filter((entry) => entry?.url && entry.url !== current);
+    for (const entry of recent) {
       const kind = PAGE_KINDS.find((candidate) => candidate.kind === entry.kind);
-      items.push({ section: 'Recent', title: entry.title, subtitle: kind?.label, icon: kind?.icon || 'history', url: entry.url });
+      const subtitle = [kind?.label, entry.time && timeAgo(entry.time)].filter(Boolean).join(' · ');
+      items.push({ section: 'Recent', title: entry.title, subtitle, icon: kind?.icon || 'history', url: entry.url });
     }
     for (const target of DESTINATIONS) {
       const url = !target.auth || signedIn ? destinationUrl(target) : null;
@@ -1146,6 +1272,18 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
         toast(compact ? 'Comfortable density' : 'Compact density');
       },
     });
+    if (recent.length) {
+      items.push({
+        section: 'Actions',
+        title: 'Clear recent pages',
+        icon: 'history',
+        keywords: 'history forget',
+        run: () => {
+          writeJson(RECENT_KEY, []);
+          toast('Recent pages cleared');
+        },
+      });
+    }
     items.push({ section: 'Actions', title: 'Kaggle Rework settings', icon: 'tune', keywords: 'preferences options', run: openSettings });
     items.push({ section: 'Actions', title: 'Keyboard shortcuts', icon: 'keyboard', keys: settings.shortcuts ? ['?'] : null, keywords: 'help keys', run: openHelp });
     return items;
@@ -1268,6 +1406,10 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
       event.preventDefault();
       const item = palette.results[palette.active];
       if (item) runItem(item, event.metaKey || event.ctrlKey);
+    } else if (event.key === 'Tab') {
+      // Tab moves through the results, so focus stays in the palette.
+      event.preventDefault();
+      if (count) setActive((palette.active + (event.shiftKey ? count - 1 : 1)) % count);
     } else if (event.key === 'Escape') {
       event.preventDefault();
       closePalette();
@@ -1328,10 +1470,10 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
     palette.input.focus();
   }
 
-  function closePalette() {
+  function closePalette(restoreFocus = true) {
     if (!palette.overlay?.classList.contains('open')) return;
     palette.overlay.classList.remove('open');
-    palette.returnFocus?.focus?.();
+    if (restoreFocus) palette.returnFocus?.focus?.();
   }
 
   function togglePalette() {
@@ -1395,6 +1537,10 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
     if (event.key === 'Escape' && anyOverlayOpen()) {
       closePalette();
       closeDialogs();
+      return;
+    }
+    if (event.key === 'Escape' && document.querySelector('kaggle-rework-countdown.open')) {
+      document.querySelector('kaggle-rework-countdown.open').classList.remove('open');
       return;
     }
     if (!settings.shortcuts || event.metaKey || event.ctrlKey || event.altKey) return;
@@ -1461,7 +1607,7 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
   function createActionsHost() {
     const { host, root } = createHost('kaggle-rework-actions', ACTIONS_CSS, `
       <button type="button" class="jump" data-action="palette" aria-label="Open the command palette" title="Command palette (${MOD} K)">
-        <span class="icon">search</span><span class="label">Jump to</span><kbd>${MOD}</kbd><kbd>K</kbd>
+        <span class="label">Jump to</span><kbd>${MOD}</kbd><kbd>K</kbd>
       </button>
       <button type="button" class="round" data-action="theme"><span class="icon">dark_mode</span></button>
       <button type="button" class="round" data-action="settings" aria-label="Kaggle Rework settings" title="Kaggle Rework settings">
@@ -1492,6 +1638,31 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
     }
     host.toggleAttribute('data-in-row', inRow);
     renderActions();
+  }
+
+  // On phones the top bar also holds the menu button and the logo, and the page starts below it.
+  function syncLayout() {
+    const nav = document.querySelector(TOP_BAR);
+    const lead = nav && nav.children.length > 1 ? nav.firstElementChild : null;
+    const narrow = Boolean(lead?.getBoundingClientRect().width);
+    document.documentElement.classList.toggle('kr-narrow', narrow);
+    const host = document.querySelector('kaggle-rework-actions');
+    if (!host || !nav) return;
+    // The bar is already full there.
+    if (host.hidden !== narrow) host.hidden = narrow;
+    if (!narrow) fitActions(host, nav);
+  }
+
+  // Kaggle's search box shrinks to make room for the buttons, but only so far. Where they still
+  // don't fit, the palette button goes first, then the rest. The fullest set is tried first every
+  // time, all before the next paint, so nothing flickers.
+  function fitActions(host, nav) {
+    const bar = document.querySelector(TOP_BAR_SURFACE);
+    if (!bar) return;
+    for (const fit of ['all', 'compact', 'none']) {
+      if (host.dataset.fit !== fit) host.dataset.fit = fit;
+      if (bar.getBoundingClientRect().right <= nav.getBoundingClientRect().right + 1) break;
+    }
   }
 
   function renderActions(force = false) {
@@ -1644,6 +1815,8 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
   let scrollFrame = 0;
 
   function onScroll() {
+    // A deadlines list opened with a click closes once the page moves on.
+    document.querySelector('kaggle-rework-countdown.open')?.classList.remove('open');
     if (scrollFrame) return;
     scrollFrame = requestAnimationFrame(() => {
       scrollFrame = 0;
@@ -1671,6 +1844,45 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
     uiParts.root.host.style.setProperty('--kr-bottom-inset', `${Math.round(inset)}px`);
   }
 
+  // The rectangle of whatever is pinned to the screen at a point (like the table of contents next
+  // to a notebook), or null where the page scrolls.
+  function pinnedAt(x, y) {
+    const content = scroller();
+    const hit = document.elementsFromPoint(x, y).find((node) => node.localName !== 'kaggle-rework-ui');
+    for (let node = hit; node && node !== content && node !== document.body; node = node.parentElement) {
+      const { position } = getComputedStyle(node);
+      if (position !== 'fixed' && position !== 'sticky') continue;
+      const rect = node.getBoundingClientRect();
+      // Sticky wrappers taller than the screen scroll along with the page.
+      if (rect.height <= window.innerHeight) return rect;
+    }
+    return null;
+  }
+
+  // Back to top sits in the bottom right corner. Content scrolling under it is fine, but it never
+  // covers pinned content: it moves to the left of it, or stays hidden when there is no room.
+  // Returns how far to move it, or null to keep it hidden.
+  function backToTopShift() {
+    const style = getComputedStyle(uiParts.top);
+    const size = parseFloat(style.width);
+    const margin = parseFloat(style.right);
+    const y = window.innerHeight - parseFloat(style.bottom) - size / 2;
+    const blockerAt = (right) => {
+      const x = window.innerWidth - right - size / 2;
+      const d = size * 0.35;
+      for (const [dx, dy] of [[0, 0], [-d, -d], [d, -d], [-d, d], [d, d]]) {
+        const rect = pinnedAt(x + dx, y + dy);
+        if (rect) return rect;
+      }
+      return null;
+    };
+    const blocker = blockerAt(margin);
+    if (!blocker) return 0;
+    const right = window.innerWidth - blocker.left + 16;
+    if (window.innerWidth - right - size < window.innerWidth / 2 || blockerAt(right)) return null;
+    return right - margin;
+  }
+
   function updateScrollUi() {
     const element = boundScroller;
     if (!element || !uiParts) return;
@@ -1680,7 +1892,19 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
     const progress = settings.readingProgress && isArticlePage() && range > element.clientHeight * 0.75;
     uiParts.progress.classList.toggle('on', progress);
     if (progress) uiParts.progress.style.transform = `scaleX(${Math.min(1, Math.max(0, top / range))})`;
-    uiParts.top.classList.toggle('show', settings.backToTop && !isEditorPage() && top > element.clientHeight * 1.5);
+    const button = uiParts.top;
+    const shift = settings.backToTop && !isEditorPage() && top > element.clientHeight * 1.5 ? backToTopShift() : null;
+    if (shift !== null && button.style.getPropertyValue('--kr-top-shift') !== `${shift}px`) {
+      // A hidden button appears in its new spot instead of sliding over to it.
+      const hidden = !button.classList.contains('show');
+      if (hidden) button.style.transition = 'none';
+      button.style.setProperty('--kr-top-shift', `${shift}px`);
+      if (hidden) {
+        void getComputedStyle(button).transform;
+        button.style.transition = '';
+      }
+    }
+    button.classList.toggle('show', shift !== null);
   }
 
   // ---------------------------------------------------------------------------
@@ -1725,6 +1949,7 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
     syncTheme();
     bindScroller();
     mountActions();
+    syncLayout();
     mountCountdown();
     updateBottomInset();
     updateScrollUi();
@@ -1746,6 +1971,10 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
 
   document.addEventListener('keydown', onKeyDown, true);
   document.addEventListener('click', closeCountdownOnOutsideClick, true);
+  window.addEventListener('pointerover', suppressSideNavHover, true);
+  window.addEventListener('pointerout', suppressSideNavHover, true);
+  window.addEventListener('resize', queueTick);
+  document.fonts?.addEventListener('loadingdone', queueTick);
 
   window.addEventListener('message', (event) => {
     if (event.origin === NOTEBOOK_ORIGIN && event.data?.type === 'kaggle-rework:notebook-ready') postNotebookConfig(event.source);
@@ -1769,10 +1998,13 @@ button:focus-visible { outline: 2px solid var(--kr-focus-ring); outline-offset: 
     renderActions(true);
     mountCountdown();
     updateScrollUi();
+    queueTick();
   });
 
   routeListeners.add(() => {
     staleTitle = document.title;
+    visitSince = Date.now();
+    recordVisit();
     closePalette();
     queueTick();
   });

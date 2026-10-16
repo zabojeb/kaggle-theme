@@ -13,8 +13,9 @@ A more polished, modern take on the new design, plus features Kaggle doesn't hav
 **Look and feel**
 
 - **Readable text**: regular weight instead of the light one Kaggle uses for body text.
-- **Modern surfaces**: soft layered shadows instead of the old Material ones, lighter borders, and a gentle lift on cards.
+- **Modern surfaces**: soft layered shadows instead of the old Material ones, lighter borders, and cards that gain depth when you point at them.
 - **Glass top bar**: the top bar turns translucent and blurs the page scrolling behind it.
+- **Calm side menu**: the collapsed side menu no longer pops open whenever the pointer passes over it; it opens from its menu button. Opening on hover can be turned back on.
 - **Visible focus**: clear blue focus rings instead of a barely visible grey.
 - **Typography polish**: even-width numbers in tables and leaderboards, balanced headings, nicer text selection, slim scrollbars.
 - **Content width**: default, wide or full width on large screens.
@@ -27,7 +28,7 @@ A more polished, modern take on the new design, plus features Kaggle doesn't hav
 - **Theme switch**: a light and dark toggle in the top bar instead of digging through account settings. Needs a signed-in account.
 - **Live deadlines**: a ticking countdown on competition pages, with the entry, team merger and final submission deadlines in your time zone.
 - **Reading progress**: a thin progress bar on notebooks, discussions and writeups.
-- **Back to top**: a button to jump back up on long pages.
+- **Back to top**: a button to jump back up on long pages. It never covers pinned content such as a notebook's table of contents.
 - **Modern notebooks**: notebooks use the same Google Sans fonts as the rest of Kaggle, with rounded code blocks, copy buttons on code cells and clean tables.
 
 ### How it works
